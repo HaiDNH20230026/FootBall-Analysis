@@ -1,0 +1,35 @@
+# ──────────────────────────────────────────────────────────────
+# Football Analysis — Python dependencies
+# Cài đặt:  pip install -r requirements.txt
+# Gợi ý dùng Python 3.10–3.11 + GPU (CUDA) cho tốc độ suy luận.
+# ──────────────────────────────────────────────────────────────
+
+# Core CV / detection / tracking
+ultralytics>=8.3.0          # YOLOv11 (detection + pose)
+supervision>=0.20.0         # ByteTrack, annotators, NMS, geometry
+opencv-python>=4.9.0
+numpy>=1.26,<2.0
+scipy>=1.11.0               # Voronoi
+
+# Team classification (embedding + giảm chiều + phân cụm)
+transformers>=4.40.0        # SigLIP vision encoder
+torch>=2.2.0                # backend cho transformers / ultralytics
+umap-learn>=0.5.5
+scikit-learn>=1.4.0
+
+# Roboflow (dataset + hosted inference API + annotators sân bóng)
+roboflow>=1.1.0
+inference>=0.9.0            # from inference import get_model
+# roboflow/sports: SoccerPitchConfiguration, ViewTransformer, TeamClassifier,
+# draw_pitch/draw_points_on_pitch — cài trực tiếp từ GitHub:
+#   pip install git+https://github.com/roboflow/sports.git
+sports @ git+https://github.com/roboflow/sports.git
+more-itertools>=10.0.0     # chunked() khi trích embedding theo batch
+
+# Experiment tracking
+wandb>=0.16.0
+
+# Tiện ích
+pyyaml>=6.0                 # đọc configs/*.yaml
+python-dotenv>=1.0.0       # nạp .env trong scripts/run_inference.py
+tqdm>=4.66.0

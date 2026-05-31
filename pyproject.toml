@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "football-analysis"
+version = "0.1.0"
+description = "Nhận diện & phân tích cầu thủ trên sân (player/ball/goalkeeper/referee)"
+requires-python = ">=3.9"
+dependencies = [
+    "supervision",
+    "numpy",
+    "opencv-python",
+    "tqdm",
+    "umap-learn",
+    "more-itertools",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

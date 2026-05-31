@@ -1,0 +1,41 @@
+# Cấu hình mặc định cho pipeline inference.
+#
+# File này được src/football_analysis/config.py nạp khi import — sửa giá trị ở đây
+# là toàn bộ package dùng theo (không cần sửa code). Muốn dùng file khác:
+#   - đặt biến môi trường FOOTBALL_CONFIG=đường/dẫn.yaml, hoặc
+#   - gọi football_analysis.config.reload("đường/dẫn.yaml") trong code.
+
+models:
+  # Một model YOLOv11s phát hiện cả player/ball/goalkeeper/referee (ball = class 0).
+  detection: models/players.pt
+  # YOLOv11s-pose phát hiện keypoint sân để tính homography.
+  pitch_keypoints: models/pitch.pt
+  # Hoặc gọi qua Roboflow API thay cho weights local — xem detection.load_models().
+
+inference:
+  device: cuda          # cuda | cpu
+  conf_threshold: 0.3   # CONF — confidence cho cả 2 model
+  kp_conf: 0.5          # KP_CONF — ngưỡng keypoint sân khi tính homography
+  nms_iou: 0.5          # IoU cho Non-Maximum Suppression nhóm người
+
+video:
+  fps: 25               # quy đổi tốc độ km/h (đọc tự động từ video khi chạy)
+
+team_classifier:
+  fit_stride: 20        # bước lấy frame khi gom crop để fit
+  switch_ratio: 0.5     # hysteresis — tỉ lệ áp đảo tối thiểu để đổi đội (0.6 = "lì" hơn)
+
+homography:
+  ema_alpha: 0.3        # HomographySmoother — hệ số EMA làm mượt keypoint sân
+
+speed:
+  pos_smooth: 5         # cửa sổ làm mượt vị trí trước khi tính vi sai
+  spd_window: 5         # cửa sổ tính vi sai trung tâm
+  max_player_ms: 12.0   # loại bước nhảy id-swap (m/s)
+  max_kmh: 40           # chặn trên để loại đỉnh nhiễu
+
+ball:
+  touch_px: 70.0        # ngưỡng khoảng cách bóng–bàn chân để coi là "chạm bóng" (~1080p)
+
+output:
+  dir: outputs/
