@@ -31,12 +31,26 @@ _DEFAULTS = {
         "conf_threshold": 0.3,
         "kp_conf": 0.5,
         "nms_iou": 0.5,
+        "imgsz_detection": 1280,  # PHẢI khớp lúc train; mặc định predict 640 làm sót người ở xa
+        "imgsz_pitch": 640,       # model keypoint sân train @640
     },
     "video": {"fps": 25},
     "team_classifier": {"fit_stride": 20, "switch_ratio": 0.5},
-    "homography": {"ema_alpha": 0.3},
+    "homography": {
+        "ransac_px": 15.0,        # sàn ngưỡng cắt outlier so với fit toàn cục (px, ~1080p)
+        "min_inliers": 5,         # số inlier tối thiểu để tin homography của frame
+        "max_reproj_px": 30.0,    # reprojection error tối đa (px) — lớn hơn thì bỏ frame
+        "median_window": 5,       # lọc trung vị chuỗi keypoint, chặn outlier (frame, lẻ; 1 = tắt)
+        "smooth_window": 5,       # Savitzky-Golay CÓ TÂM trên chuỗi keypoint (frame, lẻ; 1 = tắt = giống notebook)
+    },
     "speed": {"pos_smooth": 5, "spd_window": 5, "max_player_ms": 12.0, "max_kmh": 40},
-    "ball": {"touch_px": 70.0},
+    "ball": {"touch_px": 70.0, "max_gap_s": 2.0},
+    "render": {
+        "show_radar": True,       # bật radar 2D
+        "show_voronoi": True,     # bật biểu đồ Voronoi
+        "show_ball": True,        # bật hiển thị quả bóng (trên khung & minimap)
+        "out_fps": None,          # FPS video kết quả; None = giữ fps nguồn
+    },
     "output": {"dir": "outputs/"},
 }
 
@@ -96,17 +110,31 @@ def _apply(cfg: dict) -> None:
     g["CONF"] = cfg["inference"]["conf_threshold"]
     g["KP_CONF"] = cfg["inference"]["kp_conf"]
     g["NMS_THRESHOLD"] = cfg["inference"]["nms_iou"]
+    g["DETECTION_IMGSZ"] = cfg["inference"]["imgsz_detection"]
+    g["PITCH_IMGSZ"] = cfg["inference"]["imgsz_pitch"]
 
     # --- Video / team / homography / speed / ball ---
     g["FPS"] = cfg["video"]["fps"]
     g["FIT_STRIDE"] = cfg["team_classifier"]["fit_stride"]
     g["SWITCH_RATIO"] = cfg["team_classifier"]["switch_ratio"]
-    g["HOMOGRAPHY_ALPHA"] = cfg["homography"]["ema_alpha"]
+    g["HOMOGRAPHY_RANSAC_PX"] = cfg["homography"]["ransac_px"]
+    g["HOMOGRAPHY_MIN_INLIERS"] = cfg["homography"]["min_inliers"]
+    g["HOMOGRAPHY_MAX_REPROJ_PX"] = cfg["homography"]["max_reproj_px"]
+    g["HOMOGRAPHY_MEDIAN_WINDOW"] = cfg["homography"]["median_window"]
+    g["HOMOGRAPHY_SMOOTH_WINDOW"] = cfg["homography"]["smooth_window"]
     g["SPEED_POS_SMOOTH"] = cfg["speed"]["pos_smooth"]
     g["SPEED_WINDOW"] = cfg["speed"]["spd_window"]
     g["SPEED_MAX_PLAYER_MS"] = cfg["speed"]["max_player_ms"]
     g["SPEED_MAX_KMH"] = cfg["speed"]["max_kmh"]
     g["BALL_TOUCH_PX"] = cfg["ball"]["touch_px"]
+    g["BALL_MAX_GAP_S"] = cfg["ball"]["max_gap_s"]
+
+    # --- Render (bật/tắt overlay + fps đầu ra) ---
+    g["SHOW_RADAR"] = cfg["render"]["show_radar"]
+    g["SHOW_VORONOI"] = cfg["render"]["show_voronoi"]
+    g["SHOW_BALL"] = cfg["render"]["show_ball"]
+    g["OUT_FPS"] = cfg["render"]["out_fps"]
+
     g["OUTPUT_DIR"] = _abspath(cfg["output"]["dir"])
 
 

@@ -17,6 +17,9 @@ inference:
   conf_threshold: 0.3   # CONF — confidence cho cả 2 model
   kp_conf: 0.5          # KP_CONF — ngưỡng keypoint sân khi tính homography
   nms_iou: 0.5          # IoU cho Non-Maximum Suppression nhóm người
+  imgsz_detection: 1280 # độ phân giải infer model detection — PHẢI khớp lúc train
+                        # (predict mặc định 640 từng làm sót 5-10 người/frame ở xa)
+  imgsz_pitch: 640      # độ phân giải infer model keypoint sân (train @640)
 
 video:
   fps: 25               # quy đổi tốc độ km/h (đọc tự động từ video khi chạy)
@@ -26,7 +29,14 @@ team_classifier:
   switch_ratio: 0.5     # hysteresis — tỉ lệ áp đảo tối thiểu để đổi đội (0.6 = "lì" hơn)
 
 homography:
-  ema_alpha: 0.3        # HomographySmoother — hệ số EMA làm mượt keypoint sân
+  # Fit LS toàn bộ keypoint mỗi frame + cắt outlier lệch xa fit toàn cục -> làm mượt
+  # CÓ TÂM chuỗi keypoint theo thời gian -> fit lại H mỗi frame (xem pitch.py).
+  # KHÔNG dùng cv2.RANSAC (hay khoá vào cụm điểm sát nhau suy biến). Cửa sổ = frame, SỐ LẺ.
+  ransac_px: 15.0       # sàn ngưỡng cắt outlier: lệch > max(2x giá trị này, 3x median residual)
+  min_inliers: 5        # số keypoint tối thiểu để fit homography của 1 frame
+  max_reproj_px: 30.0   # reprojection error tối đa (px); vượt -> bỏ frame, nội suy sau
+  median_window: 5      # lọc trung vị chuỗi keypoint — chặn outlier đơn lẻ (1 = tắt)
+  smooth_window: 5      # Savitzky-Golay CÓ TÂM trên chuỗi keypoint (1 = tắt hẳn, giống notebook gốc)
 
 speed:
   pos_smooth: 5         # cửa sổ làm mượt vị trí trước khi tính vi sai
@@ -36,6 +46,13 @@ speed:
 
 ball:
   touch_px: 70.0        # ngưỡng khoảng cách bóng–bàn chân để coi là "chạm bóng" (~1080p)
+  max_gap_s: 2.0        # khoảng mất dấu tối đa (giây) còn được nội suy; dài hơn -> ẩn bóng trên map
+
+render:
+  show_radar: true      # bật/tắt radar 2D trên video
+  show_voronoi: true    # bật/tắt biểu đồ Voronoi
+  show_ball: true       # bật/tắt hiển thị quả bóng (trên khung & minimap)
+  out_fps: null         # FPS video kết quả; null = giữ fps nguồn (CLI: --out-fps)
 
 output:
   dir: outputs/

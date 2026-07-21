@@ -42,6 +42,10 @@ class BallTracker:
         else:
             self.miss += 1
             if self.xy is None or self.miss > self.max_coast:
+                # Track chết: quên vị trí cũ để lần detect kế tiếp bắt lại được
+                # từ đầu (theo confidence), dù bóng đã đi rất xa vị trí cuối.
+                self.xy = None
+                self.wh = None
                 return None
 
         x, y = self.xy

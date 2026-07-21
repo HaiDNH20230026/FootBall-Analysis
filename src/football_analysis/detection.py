@@ -11,7 +11,8 @@ import os
 
 import supervision as sv
 
-from .config import CONF, DETECTION_WEIGHTS, PITCH_WEIGHTS
+from .config import (CONF, DETECTION_WEIGHTS, PITCH_WEIGHTS,
+                     DETECTION_IMGSZ, PITCH_IMGSZ)
 
 PLAYER_MODEL_ID = "soccernet-1ae2v-e6wqy/3"
 FIELD_MODEL_ID = "football-field-detection-f07vi/15"
@@ -30,14 +31,23 @@ def load_models(api_key=None):
 
 
 class _UltralyticsAdapter:
-    """Bọc Ultralytics YOLO để có interface .infer() giống Roboflow inference."""
+    """Bọc Ultralytics YOLO để có interface .infer() giống Roboflow inference.
 
-    def __init__(self, model):
+    imgsz PHẢI khớp độ phân giải lúc train: predict() mặc định 640 trong khi
+    model detection train @1280 — chạy mặc định làm sót 5-10 người/frame ở xa
+    (đo trên video mẫu: @640 thấy 13-19 người, @1280 thấy 22-25).
+    """
+
+    def __init__(self, model, imgsz=None):
         self.model = model
+        self.imgsz = imgsz
 
     def infer(self, frame, confidence=CONF):
         # predict trả về list các Results; giữ [0] ở chỗ gọi cho đồng nhất Roboflow.
-        return self.model.predict(frame, conf=confidence, verbose=False)
+        kwargs = dict(conf=confidence, verbose=False)
+        if self.imgsz:
+            kwargs["imgsz"] = self.imgsz
+        return self.model.predict(frame, **kwargs)
 
 
 def load_models_local(detection_path=None, pitch_path=None, device=None):
@@ -54,7 +64,8 @@ def load_models_local(detection_path=None, pitch_path=None, device=None):
     if device:
         det.to(device)
         fld.to(device)
-    return _UltralyticsAdapter(det), _UltralyticsAdapter(fld)
+    return (_UltralyticsAdapter(det, imgsz=DETECTION_IMGSZ),
+            _UltralyticsAdapter(fld, imgsz=PITCH_IMGSZ))
 
 
 def detect(model, frame, conf=CONF):
